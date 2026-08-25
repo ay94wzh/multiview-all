@@ -2,7 +2,7 @@
 multiview
 
 # ---- vendored dependency clone (re-clone / pip install instead) ----
-
+robosuite
 # ---- policy_robosuite: generated data & artifacts ----
 # replayed npz demos (~2.5G, regenerable via script_robosuite_demos/replay_robomimic.py)
 policy_robosuite/demos/
