@@ -5,7 +5,8 @@ multiview
 robosuite
 # ---- policy_robosuite: generated data & artifacts ----
 # replayed npz demos (~2.5G, regenerable via script_robosuite_demos/replay_robomimic.py)
-policy_robosuite/demos/
+policy_robosuite/demos/Square
+policy_robosuite/demos/Lift
 # model weights
 policy_robosuite/checkpoints/
 # wandb logs
