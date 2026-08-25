@@ -8,9 +8,11 @@
 # Notes:
 #   * torch comes from the pytorch pip wheel index (cu128 build), NOT the conda
 #     pytorch channel — that channel's pytorch-cuda meta-package stops at 12.4.
-#     The wheel URLs below pin the exact tested build for cp310/manylinux_2_28
-#     x86_64 (verified live against download.pytorch.org). Equivalent shell
-#     commands (what the yml does under the hood):
+#     The pip-section entries are bare wheel URLs pinning the exact tested
+#     build for cp310/manylinux_2_28 x86_64 (verified live against
+#     download.pytorch.org). `name==ver @ url` would be invalid PEP 508, and
+#     pip infers name/version from the wheel filename. Equivalent shell
+#     commands:
 #       pip install torch==2.11.0 torchvision==0.26.0 --index-url https://download.pytorch.org/whl/cu128
 #   * If the machine's driver is older than CUDA 12.8, swap the two wheel URLs
 #     for the cu124 index (https://download.pytorch.org/whl/cu124) and adjust
@@ -29,8 +31,8 @@ dependencies:
   - python=3.10
   - pip
   - pip:
-      - torch==2.11.0+cu128 @ https://download.pytorch.org/whl/cu128/torch-2.11.0%2Bcu128-cp310-cp310-manylinux_2_28_x86_64.whl
-      - torchvision==0.26.0+cu128 @ https://download.pytorch.org/whl/cu128/torchvision-0.26.0%2Bcu128-cp310-cp310-manylinux_2_28_x86_64.whl
+      - https://download.pytorch.org/whl/cu128/torch-2.11.0%2Bcu128-cp310-cp310-manylinux_2_28_x86_64.whl
+      - https://download.pytorch.org/whl/cu128/torchvision-0.26.0%2Bcu128-cp310-cp310-manylinux_2_28_x86_64.whl
       - "mujoco<3.10"
       - robosuite==1.5.2
       - numpy
