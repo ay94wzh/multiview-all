@@ -1,0 +1,53 @@
+# Pure diffusion-policy baseline (arch=baseline): the controlled comparison
+# for the view-invariance machinery. Same 4 train views, same data pipeline
+# and window semantics, same trainer recipe (AdamW groups, lr, backbone_lr,
+# grad_clip, constant LR, no EMA) as configs/train_multiview.yaml.
+# The ONLY difference is the architecture: no FiLM (ray maps / EE-trail), no
+# attention fusion, no per-view aux heads, no online distillation, no
+# temporal transformer — a shared ResNet18-GN encodes every frame and all
+# V*T_o frame tokens are concatenated into one global conditioning vector
+# (diffusion_policy obs_as_global_cond style) for the SAME 1D-UNet diffusion
+# head (models/heads.py) — the head this baseline exists to validate.
+arch: baseline
+
+cameras:
+  train_views: [top_camera, left_camera, right_camera, bottom_camera]
+  image_size: [160, 160]
+  camera_radius: 1.0
+
+data:
+  task: Lift
+  obs_horizon: 3
+  batch_size: 16
+  dataset_dir: demos
+  proprio_dim: 7
+  goal_dim: 3                # goal_pos conditioning, embedded alongside qpos
+  seed: 0
+
+encoder:
+  embed_dim: 256             # the baseline uses a plain ResNet18-GN (no FiLM)
+
+distillation:
+  enabled: false             # explicit: the baseline never sees front_camera
+
+action_head:
+  action_dim: 7              # OSC_POSE: 3 pos + 3 rot + 1 gripper
+  horizon: 16
+  num_train_steps: 100
+  num_inference_steps: 10
+  use_proprio: true
+
+train:
+  lr: 0.0001
+  backbone_lr: 0.00001
+  epochs: 100
+  steps_per_epoch: 200
+  grad_clip: 1.0
+  # separate dir on purpose: never auto-resume a multiview checkpoint
+  checkpoint_dir: checkpoints_baseline
+  log_interval: 20
+  eval_interval_epochs: 25
+  device: cuda
+  use_wandb: true
+  wandb_project: multiview-robosuite
+  wandb_run_name: "baseline"

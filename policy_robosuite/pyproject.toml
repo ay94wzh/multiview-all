@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "policy_robosuite"
+version = "0.1.0"
+description = "View-invariant robot manipulation policy via view-aware temporal encoding (robosuite / robomimic tasks)"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy",
+    "pyyaml",
+    "einops",
+    "opencv-python-headless",
+    "torch",
+    "torchvision",
+    "robosuite==1.5.2",
+    "wandb",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "tqdm"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

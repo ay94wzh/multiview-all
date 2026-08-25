@@ -1,0 +1,71 @@
+# Multiview teacher + online distillation (default config), robosuite tasks.
+# Cameras live on the front hemisphere of a 1.0 m sphere around the tabletop
+# look target (0, 0, 0.8) — same rig as script_robosuite_demos/replay_robomimic.py.
+arch: multiview
+cameras:
+  train_views: [top_camera, left_camera, right_camera, bottom_camera]
+  eval_view: front_camera
+  image_size: [160, 160]
+  view_dropout_prob: 0.2   # randomize which views reach the fusion
+  camera_radius: 1.0
+
+trajectory:
+  window_steps:  24        # robosuite episodes run 59-127 steps (was 64 for ManiSkill)
+  recency_decay: 0.97
+  line_width: 2
+
+data:
+  task: Lift              # robomimic task: Lift | Can | Square
+  obs_horizon: 3
+  batch_size: 16
+  dataset_dir: demos      # demos/<task>/episode_XXXXX.npz (replayed)
+  proprio_dim: 7          # Panda robot0_joint_pos (ManiSkill was 9)
+  seed: 0
+
+encoder:
+  embed_dim: 256             # = fusion.latent_dim
+  use_film: true             # FiLM on/off — the key conditioning ablation
+
+temporal:
+  num_layers: 2
+  num_heads: 4
+  dropout: 0.0
+
+fusion:
+  num_queries: 4             # learned queries attending over views
+  num_heads: 4
+  latent_dim: 256            # = encoder.embed_dim
+  dropout: 0.0
+
+action_head:
+  action_dim: 7              # OSC_POSE: 3 pos + 3 rot + 1 gripper
+  horizon: 16
+  num_train_steps: 100
+  num_inference_steps: 10
+  use_proprio: true
+
+distillation:
+  enabled: true
+  student_view: front_camera
+  latent_weight: 1.0
+  action_weight: 0.0
+  stop_teacher_grad: true
+
+loss:
+  aux_view_weight: 0.2
+
+train:
+  lr: 0.0001
+  backbone_lr: 0.00001
+  epochs: 100
+  steps_per_epoch: 200
+  grad_clip: 1.0
+  checkpoint_dir: checkpoints
+  log_interval: 20
+  eval_interval_epochs: 25
+  device: cuda
+  # wandb logging: run `wandb login` once (or set WANDB_API_KEY) before
+  # training; without a key the trainer prints a warning and continues.
+  use_wandb: true
+  wandb_project: multiview-robosuite
+  wandb_run_name: ""   # empty = auto-generated name

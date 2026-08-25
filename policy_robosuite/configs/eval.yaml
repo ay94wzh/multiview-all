@@ -1,0 +1,9 @@
+# Evaluation config
+eval:
+  checkpoint: checkpoints/latest.pt
+  num_episodes: 50
+  use_teacher: false   # false = student (single held-out front camera), the deployed path
+  render: false
+  # 50 DDIM steps: near-deterministic sampling (10 steps loses a lot of
+  # fidelity at the fragile grasp — measured 0.0 vs 1.0 on a memorized seed).
+  inference_steps: 50

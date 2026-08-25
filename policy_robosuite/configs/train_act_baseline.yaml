@@ -1,0 +1,71 @@
+# ACT (action chunking with transformers, CVAE) baseline — the transformer
+# action-head variant of the controlled baseline (arch=baseline).
+# Same obs encoding (shared ResNet18-GN -> V*T_o flat frame tokens), same data
+# pipeline and window semantics, same trainer recipe (AdamW groups lr 1e-4 /
+# backbone 1e-5, grad_clip 1.0, constant LR, NO EMA) as
+# configs/train_baseline.yaml. Differences from the diffusion baseline:
+#   * action_head.head_type: act — a DETR-style CVAE transformer head
+#     (src/policy_robosuite/models/act.py, Zhao et al. ACT) replaces the 1D-UNet
+#     diffusion head; kl_weight 10, latent_dim 32, deterministic z=0 decoding.
+#   * data.task: Lift — the same task as train_baseline.yaml, so the
+#     ACT and diffusion heads face the identical data/recipe head-to-head.
+# NOTE: the ACT reference trains with EMA (power 0.75); our controlled-
+# comparison philosophy keeps the shared trainer unchanged, so this run has no
+# EMA — a documented asymmetry, like the diffusion baseline's median temporal
+# ensembling vs the reference's exponential-weighted scheme.
+# num_train_steps / num_inference_steps are inert for ACT (diffusion-schedule
+# legacy fields, kept for script surface parity).
+arch: baseline
+
+cameras:
+  train_views: [top_camera, left_camera, right_camera, bottom_camera]
+  image_size: [160, 160]
+  camera_radius: 1.0
+
+data:
+  task: Lift
+  obs_horizon: 3
+  batch_size: 16
+  dataset_dir: demos
+  proprio_dim: 7
+  goal_dim: 3                # goal_pos conditioning, embedded alongside qpos
+  seed: 0
+
+encoder:
+  embed_dim: 256             # the baseline uses a plain ResNet18-GN (no FiLM)
+
+distillation:
+  enabled: false             # explicit: the baseline never sees front_camera
+
+action_head:
+  head_type: act
+  action_dim: 7              # OSC_POSE: 3 pos + 3 rot + 1 gripper
+  horizon: 30                # chunk length — same as the diffusion baseline
+  num_train_steps: 100       # unused by ACT (diffusion-schedule legacy field)
+  num_inference_steps: 10    # unused by ACT (kept for script surface parity)
+  use_proprio: true
+  act:
+    latent_dim: 32
+    kl_weight: 10.0
+    hidden_dim: 256
+    enc_layers: 2
+    dec_layers: 4
+    nhead: 8
+    dim_feedforward: 512
+    dropout: 0.1
+
+train:
+  lr: 0.0001
+  backbone_lr: 0.00001
+  epochs: 100
+  steps_per_epoch: 200
+  grad_clip: 1.0
+  # separate dir on purpose: _shape_signature includes head_type, so resuming
+  # a diffusion baseline ckpt under this config fails loudly (never silently)
+  checkpoint_dir: checkpoints_act_baseline_lift_100_30
+  log_interval: 20
+  eval_interval_epochs: 25
+  device: cuda
+  use_wandb: true
+  wandb_project: multiview-robosuite
+  wandb_run_name: "act-baseline"

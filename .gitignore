@@ -1,0 +1,28 @@
+# ---- existing ----
+multiview
+
+# ---- vendored dependency clone (re-clone / pip install instead) ----
+robosuite/
+
+# ---- policy_robosuite: generated data & artifacts ----
+# replayed npz demos (~2.5G, regenerable via script_robosuite_demos/replay_robomimic.py)
+policy_robosuite/demos/
+# model weights
+policy_robosuite/checkpoints/
+# wandb logs
+policy_robosuite/runs/
+# pip build artifacts
+policy_robosuite/build/
+
+# ---- generated artifacts ----
+script_robosuite_demos/camera_check.png
+
+# ---- python ----
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+.ipynb_checkpoints/
+.DS_Store
