@@ -3,12 +3,18 @@
 # numpy 2.2.6, robosuite 1.5.2, mujoco 3.9.0, h5py 3.16, wandb 0.28.
 #
 #   conda env create -f environment.yml
-#   conda run -n multiview-robosuite pip install ./policy_robosuite
-#   conda run -n multiview-robosuite python -c "import robosuite, policy_robosuite"
+#   conda run -n multiview-robosuite python -c "import torch, robosuite, policy_robosuite"
 #
 # Notes:
-#   * torch comes from the pytorch conda channel (CUDA 12.8 build). If the new
-#     machine's driver is older, lower pytorch-cuda (e.g. 12.1).
+#   * torch comes from the pytorch pip wheel index (cu128 build), NOT the conda
+#     pytorch channel — that channel's pytorch-cuda meta-package stops at 12.4.
+#     The wheel URLs below pin the exact tested build for cp310/manylinux_2_28
+#     x86_64 (verified live against download.pytorch.org). Equivalent shell
+#     commands (what the yml does under the hood):
+#       pip install torch==2.11.0 torchvision==0.26.0 --index-url https://download.pytorch.org/whl/cu128
+#   * If the machine's driver is older than CUDA 12.8, swap the two wheel URLs
+#     for the cu124 index (https://download.pytorch.org/whl/cu124) and adjust
+#     the +cu128 tags accordingly.
 #   * "mujoco<3.10" is load-bearing: robosuite's setup.py caps it (mj_fullM's
 #     signature changed in 3.10) and the pip section enforces the cap against
 #     whatever robosuite would otherwise pull.
@@ -18,16 +24,13 @@
 #     `sudo apt install libegl1 libgl1` (mujoco's pip wheels bundle the rest).
 name: multiview-robosuite
 channels:
-  - pytorch
-  - nvidia
   - conda-forge
 dependencies:
   - python=3.10
-  - pytorch
-  - torchvision
-  - pytorch-cuda=12.8
   - pip
   - pip:
+      - torch==2.11.0+cu128 @ https://download.pytorch.org/whl/cu128/torch-2.11.0%2Bcu128-cp310-cp310-manylinux_2_28_x86_64.whl
+      - torchvision==0.26.0+cu128 @ https://download.pytorch.org/whl/cu128/torchvision-0.26.0%2Bcu128-cp310-cp310-manylinux_2_28_x86_64.whl
       - "mujoco<3.10"
       - robosuite==1.5.2
       - numpy
