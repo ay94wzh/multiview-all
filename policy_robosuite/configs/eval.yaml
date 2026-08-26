@@ -1,6 +1,9 @@
 # Evaluation config
 eval:
-  checkpoint: checkpoints/latest.pt
+  # relative to the CWD you run scripts/eval.py from (policy_robosuite/);
+  # running from the repo root also works — scripts/_argpath.py falls back to
+  # policy_robosuite/ when a config/checkpoint path is not found under CWD
+  checkpoint: checkpoints_baseline/epoch-10.pt
   num_episodes: 50
   use_teacher: false   # false = student (single held-out front camera), the deployed path
   render: false

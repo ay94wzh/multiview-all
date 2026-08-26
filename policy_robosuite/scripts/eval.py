@@ -12,6 +12,7 @@ import dataclasses
 
 import torch
 
+from _argpath import resolve  # scripts/ dir (sys.path[0]) — see _argpath.py
 from policy_robosuite.config import ProjectConfig
 from policy_robosuite.eval.rollout import evaluate
 from policy_robosuite.models.policy import build_policy
@@ -32,18 +33,18 @@ def main():
                         help="override eval.inference_steps (default: yaml value)")
     args = parser.parse_args()
 
-    eval_cfg = ProjectConfig.from_yaml(args.config, args.overrides)
+    eval_cfg = ProjectConfig.from_yaml(resolve(args.config), args.overrides)
     if args.num_episodes is not None:
         eval_cfg.eval.num_episodes = args.num_episodes
     if args.seed is not None:
         eval_cfg.eval.seed = args.seed
     if args.inference_steps is not None:
         eval_cfg.eval.inference_steps = args.inference_steps
-    train_cfg = ProjectConfig.from_yaml(args.train_config)
+    train_cfg = ProjectConfig.from_yaml(resolve(args.train_config))
     cfg = train_cfg
     cfg.eval = eval_cfg.eval
 
-    ckpt = torch.load(cfg.eval.checkpoint, map_location="cpu", weights_only=False)
+    ckpt = torch.load(resolve(cfg.eval.checkpoint), map_location="cpu", weights_only=False)
     if "cfg" in ckpt:  # a checkpoint also carries the config it was trained with
         ckpt_cfg = ckpt["cfg"]
         if isinstance(ckpt_cfg, dict) and "goal_dim" not in ckpt_cfg.get("data", {}):

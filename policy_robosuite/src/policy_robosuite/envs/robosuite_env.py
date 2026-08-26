@@ -42,6 +42,14 @@ VIEW_CAMERA_NAMES = (
     "front_camera",
 )
 
+# High-res human "render" camera: always injected into the model (so
+# get_render_rgb can sim.render it at any size) but never part of the obs
+# camera_names — it is a diagnostic view, not a policy input. Mirrors
+# multiview's maniskill_env.get_render_rgb.
+RENDER_CAMERA_NAME = "render_camera"
+
+ALL_CAMERA_NAMES = VIEW_CAMERA_NAMES + (RENDER_CAMERA_NAME,)
+
 # Same rig as the demo replay (script_robosuite_demos/replay_robomimic.py).
 LOOK_TARGET = [0.0, 0.0, 0.8]   # tabletop workspace (ManiSkill used (0,0,0.2))
 CAMERA_RADIUS = 1.0
@@ -55,6 +63,7 @@ _CAMERA_SPHERICAL = {
     "right_camera": (-40.0, 20.0),
     "bottom_camera": (0.0, 5.0),
     "front_camera": (0.0, 30.0),
+    "render_camera": (0.0, 60.0),  # steep 3/4 overview for human viewing
 }
 
 # Task -> robosuite env name (the hdf5 env_args env_name).
@@ -74,7 +83,7 @@ def _spherical_eye(name: str) -> np.ndarray:
     return np.asarray(LOOK_TARGET) + off
 
 
-def _camera_elements(camera_names: tuple[str, ...] = VIEW_CAMERA_NAMES) -> list[ET.Element]:
+def _camera_elements(camera_names: tuple[str, ...] = ALL_CAMERA_NAMES) -> list[ET.Element]:
     """The cameras as MuJoCo <camera> elements (pos + quat wxyz).
 
     Frame columns [right | up | -forward]; MuJoCo cameras look along -z.
@@ -118,7 +127,7 @@ def _add_cameras_processor(xml: str) -> str:
     wb = root.find("worldbody")
     assert wb is not None, "model xml has no top-level <worldbody>"
     for elem in wb.findall("camera"):
-        if elem.get("name") in VIEW_CAMERA_NAMES:
+        if elem.get("name") in ALL_CAMERA_NAMES:
             wb.remove(elem)
     for elem in _camera_elements():
         wb.append(elem)
@@ -243,6 +252,17 @@ def get_view_rgbs(obs: dict, camera_names: tuple[str, ...] = VIEW_CAMERA_NAMES) 
     flipped here to the top-down orientation the demos store.
     """
     return {name: np.flipud(obs[f"{name}_image"]) for name in camera_names}
+
+
+def get_render_rgb(env, height: int = 480, width: int = 480) -> np.ndarray:
+    """High-res (height, width, 3) uint8 frame from the human render_camera.
+
+    The render camera lives in every model (see ALL_CAMERA_NAMES) so we can
+    sim.render it at any size; it is NOT in the obs camera_names (the env only
+    renders requested cameras each step). Same flipud as get_view_rgbs —
+    robosuite's opengl convention leaves sim.render bottom-up.
+    """
+    return np.flipud(env.sim.render(height, width, camera_name=RENDER_CAMERA_NAME))
 
 
 def get_ee_pose(env) -> np.ndarray:

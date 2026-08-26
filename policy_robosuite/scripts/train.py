@@ -17,6 +17,7 @@ os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
 from torch.utils.data import DataLoader, RandomSampler
 
+from _argpath import resolve  # scripts/ dir (sys.path[0]) — see _argpath.py
 from policy_robosuite.config import ProjectConfig
 from policy_robosuite.data.dataset import MultiViewDataset, collate_fn
 from policy_robosuite.models.policy import build_policy
@@ -59,7 +60,7 @@ def main():
     )
     args = parser.parse_args()
 
-    cfg = ProjectConfig.from_yaml(args.config, args.overrides)
+    cfg = ProjectConfig.from_yaml(resolve(args.config), args.overrides)
     dataset = MultiViewDataset(cfg)
     # Sample windows WITH REPLACEMENT so each epoch contains exactly
     # steps_per_epoch batches, regardless of the dataset size. Without this,
@@ -82,7 +83,8 @@ def main():
     )
     model = build_policy(cfg)
     trainer = Trainer(cfg, model, loader)
-    ckpt_path = Path(args.resume_from) if args.resume_from else Path(cfg.train.checkpoint_dir) / "latest.pt"
+    ckpt_path = (resolve(args.resume_from) if args.resume_from
+                 else resolve(Path(cfg.train.checkpoint_dir) / "latest.pt"))
     if not args.no_resume and ckpt_path.exists():
         trainer.load(ckpt_path)
         print(f"[train] resumed from {ckpt_path} (epoch {trainer.epoch})", flush=True)

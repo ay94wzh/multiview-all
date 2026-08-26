@@ -16,7 +16,7 @@ cameras:
   camera_radius: 1.0
 
 data:
-  task: Lift
+  task: Can
   obs_horizon: 3
   batch_size: 16
   dataset_dir: demos
@@ -40,13 +40,13 @@ action_head:
 train:
   lr: 0.0001
   backbone_lr: 0.00001
-  epochs: 100
+  epochs: 20
   steps_per_epoch: 200
   grad_clip: 1.0
   # separate dir on purpose: never auto-resume a multiview checkpoint
   checkpoint_dir: checkpoints_baseline
   log_interval: 20
-  eval_interval_epochs: 25
+  eval_interval_epochs: 10
   device: cuda
   use_wandb: true
   wandb_project: multiview-robosuite
